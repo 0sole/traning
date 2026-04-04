@@ -1,13 +1,7 @@
+-- button.lua (legacy compat — asıl element mantığı elements.lua içinde)
 local buttons = {}
 
-function addsidebarbtn(id, name)
-
-    buttons[id] = {id = id, name = name}
-end
-
 function addButton(id, name)
-
-
     buttons[id] = {id = id, name = name}
 end
 
