@@ -1,38 +1,33 @@
-local theme = require("theme")
+local theme = _G.DragoTheme
+local elements = _G.DragoElements
 local Menu = {}
 
--- Ana Kütüphane Fonksiyonu
-function Menu:CreateWindow(config)
-    local Window = {
-        Title = config.Name or "Drago Eno",
-        Tabs = {},
-        ActiveTab = nil
-    }
+function Menu:CreateWindow(name)
+    local sgui = Instance.new("ScreenGui", game.CoreGui)
+    
+    local mainFrame = Instance.new("Frame", sgui)
+    mainFrame.Size = UDim2.new(0, 620, 0, 390) --
+    mainFrame.Position = UDim2.new(0.5, -310, 0.5, -195)
+    mainFrame.BackgroundColor3 = theme.bg_deep
+    
+    local sidebar = Instance.new("Frame", mainFrame)
+    sidebar.Size = UDim2.new(0, 170, 1, 0) --
+    sidebar.BackgroundColor3 = theme.bg_sidebar
+    
+    local container = Instance.new("ScrollingFrame", mainFrame)
+    container.Position = UDim2.new(0, 180, 0, 20)
+    container.Size = UDim2.new(1, -190, 1, -40)
+    container.BackgroundTransparency = 1
 
-    -- Tab oluşturma fonksiyonu (Window objesine bağlı)
-    function Window:CreateTab(name, icon)
-        local Tab = {
-            Name = name,
-            Elements = {},
-            Parent = Window
-        }
-        
-        -- Buton oluşturma (Tab objesine bağlı)
-        function Tab:CreateButton(btnConfig)
-            local Button = {
-                Name = btnConfig.Name,
-                Callback = btnConfig.Callback
-            }
-            table.insert(self.Elements, Button)
-            return Button
+    local window = {}
+    function window:CreateTab(tabName)
+        local tab = {}
+        function tab:CreateButton(config)
+            elements.CreateButton(container, config.Name, config.Callback)
         end
-
-        table.insert(Window.Tabs, Tab)
-        if not Window.ActiveTab then Window.ActiveTab = Tab end
-        return Tab
+        return tab
     end
-
-    return Window
+    return window
 end
 
 return Menu
