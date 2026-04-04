@@ -1,16 +1,7 @@
--- DRAGO ENO LOADER
 local baseUrl = "https://raw.githubusercontent.com/0sole/traning/main/"
 
-local function fast_require(file)
-    local content = game:HttpGet(baseUrl .. file .. ".lua")
-    return loadstring(content)()
-end
+_G.DragoTheme = loadstring(game:HttpGet(baseUrl .. "theme.lua"))()
+_G.DragoElements = loadstring(game:HttpGet(baseUrl .. "elements.lua"))()
+local menu = loadstring(game:HttpGet(baseUrl .. "menu.lua"))()
 
--- Tüm modülleri belleğe al
-local DragoLib = {}
-DragoLib.Theme = fast_require("theme")
-DragoLib.Elements = fast_require("elements")
-DragoLib.Menu = fast_require("menu")
-
--- Kullanıcıya ana objeyi döndür
-return DragoLib.Menu
+return menu
