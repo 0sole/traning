@@ -1,201 +1,183 @@
-local theme = _G.DragoTheme
-local TweenService = game:GetService("TweenService")
-local Elements = {}
+local T   = _G.DragoTheme
+local TS  = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local E   = {}
 
--- ─────────────────────────────────────────────
--- Yardımcı: Glow Efekti (UIStroke simülasyonu)
--- ─────────────────────────────────────────────
-local function AddGlow(obj, color, thickness)
-    local stroke = Instance.new("UIStroke", obj)
-    stroke.Color = color or theme.accent_glow
-    stroke.Thickness = thickness or 1
-    stroke.Transparency = 0.6
-    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    return stroke
+-- ── Yardımcılar ──────────────────────────────────────────────────────────────
+
+local function tween(obj, t, props, style, dir)
+    return TS:Create(obj,
+        TweenInfo.new(t, style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out),
+        props)
 end
 
-local function PulseGlow(stroke, fast)
-    local speed = fast and 0.6 or 1.2
-    local function loop()
-        TweenService:Create(stroke, TweenInfo.new(speed, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-            {Transparency = 0.0}):Play()
-    end
-    loop()
+local function corner(obj, r)
+    local c = Instance.new("UICorner", obj)
+    c.CornerRadius = UDim.new(0, r or 3)
+    return c
 end
 
--- ─────────────────────────────────────────────
--- Ortak Kart
--- ─────────────────────────────────────────────
-local function CreateCard(parent, text)
+local function stroke(obj, color, thick, trans)
+    local s = Instance.new("UIStroke", obj)
+    s.Color       = color or T.border_color
+    s.Thickness   = thick or 1
+    s.Transparency = trans or 0
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    return s
+end
+
+-- ── Ortak Kart ───────────────────────────────────────────────────────────────
+
+local function Card(parent, text, height)
     local card = Instance.new("Frame", parent)
-    card.Size = UDim2.new(1, -12, 0, 46)
-    card.BackgroundColor3 = theme.bg_element
+    card.Size            = UDim2.new(1, -12, 0, height or 46)
+    card.BackgroundColor3 = T.bg_element
     card.BorderSizePixel = 0
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 3)
+    corner(card, 3)
+    local s = stroke(card, T.border_color, 1, 0)
 
-    local stroke = AddGlow(card, theme.border_color, 1)
-    stroke.Transparency = 0.0
+    local bar = Instance.new("Frame", card)
+    bar.Size            = UDim2.new(0, 2, 0.6, 0)
+    bar.Position        = UDim2.new(0, 0, 0.2, 0)
+    bar.BackgroundColor3 = T.accent_dim
+    bar.BorderSizePixel = 0
 
-    -- Sol Aksan Çizgisi
-    local leftBar = Instance.new("Frame", card)
-    leftBar.Size = UDim2.new(0, 2, 0.6, 0)
-    leftBar.Position = UDim2.new(0, 0, 0.2, 0)
-    leftBar.BackgroundColor3 = theme.accent_dim
-    leftBar.BorderSizePixel = 0
+    local lbl = Instance.new("TextLabel", card)
+    lbl.Text             = text
+    lbl.Size             = UDim2.new(0.55, 0, 1, 0)
+    lbl.Position         = UDim2.new(0, 14, 0, 0)
+    lbl.TextColor3       = T.text_dark
+    lbl.TextXAlignment   = Enum.TextXAlignment.Left
+    lbl.BackgroundTransparency = 1
+    lbl.Font             = Enum.Font.SourceSans
+    lbl.TextSize         = 13
 
-    local label = Instance.new("TextLabel", card)
-    label.Text = text
-    label.Size = UDim2.new(0.55, 0, 1, 0)
-    label.Position = UDim2.new(0, 14, 0, 0)
-    label.TextColor3 = theme.text_dark
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 13
-
-    -- Hover Animasyonu
     card.MouseEnter:Connect(function()
-        TweenService:Create(card, TweenInfo.new(0.18), {BackgroundColor3 = theme.bg_element_h}):Play()
-        TweenService:Create(stroke, TweenInfo.new(0.18), {Color = theme.border_glow, Transparency = 0.3}):Play()
-        TweenService:Create(leftBar, TweenInfo.new(0.18), {BackgroundColor3 = theme.accent_glow}):Play()
-        TweenService:Create(label, TweenInfo.new(0.18), {TextColor3 = theme.text_main}):Play()
+        tween(card, 0.15, {BackgroundColor3 = T.bg_element_h}):Play()
+        tween(s,    0.15, {Color = T.border_glow, Transparency = 0.3}):Play()
+        tween(bar,  0.15, {BackgroundColor3 = T.accent_glow}):Play()
+        tween(lbl,  0.15, {TextColor3 = T.text_main}):Play()
     end)
     card.MouseLeave:Connect(function()
-        TweenService:Create(card, TweenInfo.new(0.25), {BackgroundColor3 = theme.bg_element}):Play()
-        TweenService:Create(stroke, TweenInfo.new(0.25), {Color = theme.border_color, Transparency = 0.0}):Play()
-        TweenService:Create(leftBar, TweenInfo.new(0.25), {BackgroundColor3 = theme.accent_dim}):Play()
-        TweenService:Create(label, TweenInfo.new(0.25), {TextColor3 = theme.text_dark}):Play()
+        tween(card, 0.2, {BackgroundColor3 = T.bg_element}):Play()
+        tween(s,    0.2, {Color = T.border_color, Transparency = 0}):Play()
+        tween(bar,  0.2, {BackgroundColor3 = T.accent_dim}):Play()
+        tween(lbl,  0.2, {TextColor3 = T.text_dark}):Play()
     end)
 
     return card
 end
 
--- ─────────────────────────────────────────────
--- Button
--- ─────────────────────────────────────────────
-function Elements.CreateButton(parent, text, callback)
-    local card = CreateCard(parent, text)
+-- ── Button ───────────────────────────────────────────────────────────────────
+
+function E.CreateButton(parent, text, callback)
+    local card = Card(parent, text)
 
     local btn = Instance.new("TextButton", card)
-    btn.Size = UDim2.new(0, 88, 0, 26)
-    btn.Position = UDim2.new(1, -96, 0.5, -13)
-    btn.BackgroundColor3 = theme.accent_main
-    btn.Text = "EXECUTE"
-    btn.TextColor3 = theme.text_main
-    btn.Font = Enum.Font.SourceSansBold
-    btn.TextSize = 11
+    btn.Size            = UDim2.new(0, 88, 0, 26)
+    btn.Position        = UDim2.new(1, -96, 0.5, -13)
+    btn.BackgroundColor3 = T.accent_main
+    btn.Text            = "EXECUTE"
+    btn.TextColor3      = T.text_main
+    btn.Font            = Enum.Font.SourceSansBold
+    btn.TextSize        = 11
     btn.BorderSizePixel = 0
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 2)
-
-    -- Glow stroke on button
-    local btnStroke = AddGlow(btn, theme.accent_glow, 1)
-    btnStroke.Transparency = 0.7
+    corner(btn, 2)
+    local bs = stroke(btn, T.accent_glow, 1, 0.7)
 
     btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = theme.accent_glow}):Play()
-        TweenService:Create(btnStroke, TweenInfo.new(0.15), {Transparency = 0.2}):Play()
+        tween(btn, 0.15, {BackgroundColor3 = T.accent_glow}):Play()
+        tween(bs,  0.15, {Transparency = 0.2}):Play()
     end)
     btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = theme.accent_main}):Play()
-        TweenService:Create(btnStroke, TweenInfo.new(0.2), {Transparency = 0.7}):Play()
+        tween(btn, 0.2, {BackgroundColor3 = T.accent_main}):Play()
+        tween(bs,  0.2, {Transparency = 0.7}):Play()
     end)
-
     btn.MouseButton1Click:Connect(function()
-        -- Click flash efekti
-        TweenService:Create(btn, TweenInfo.new(0.08), {BackgroundColor3 = Color3.fromRGB(255, 80, 80)}):Play()
-        TweenService:Create(btnStroke, TweenInfo.new(0.08), {Transparency = 0.0}):Play()
-        task.delay(0.12, function()
-            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = theme.accent_main}):Play()
-            TweenService:Create(btnStroke, TweenInfo.new(0.2), {Transparency = 0.7}):Play()
+        tween(btn, 0.08, {BackgroundColor3 = Color3.fromRGB(255, 80, 80)}):Play()
+        task.delay(0.15, function()
+            tween(btn, 0.2, {BackgroundColor3 = T.accent_main}):Play()
         end)
         task.spawn(callback)
     end)
 end
 
--- ─────────────────────────────────────────────
--- Toggle
--- ─────────────────────────────────────────────
-function Elements.CreateToggle(parent, text, default, callback)
-    local card = CreateCard(parent, text)
+-- ── Toggle ───────────────────────────────────────────────────────────────────
+
+function E.CreateToggle(parent, text, default, callback)
+    local card    = Card(parent, text)
     local enabled = default or false
 
     local track = Instance.new("Frame", card)
-    track.Size = UDim2.new(0, 42, 0, 20)
-    track.Position = UDim2.new(1, -52, 0.5, -10)
-    track.BackgroundColor3 = enabled and theme.accent_main or Color3.fromRGB(30, 30, 30)
+    track.Size            = UDim2.new(0, 42, 0, 20)
+    track.Position        = UDim2.new(1, -52, 0.5, -10)
+    track.BackgroundColor3 = enabled and T.accent_main or Color3.fromRGB(30, 30, 30)
     track.BorderSizePixel = 0
-    Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
-    local trackStroke = AddGlow(track, theme.accent_glow, 1)
-    trackStroke.Transparency = enabled and 0.4 or 1.0
+    corner(track, 10)
+    local ts = stroke(track, T.accent_glow, 1, enabled and 0.4 or 1)
 
     local knob = Instance.new("Frame", track)
-    knob.Size = UDim2.new(0, 14, 0, 14)
-    knob.Position = enabled and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
+    knob.Size            = UDim2.new(0, 14, 0, 14)
+    knob.Position        = enabled and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
     knob.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
     knob.BorderSizePixel = 0
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(1, 0)
+    corner(knob, 7)
 
     local function refresh()
-        local targetPos = enabled and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
-        local targetColor = enabled and theme.accent_main or Color3.fromRGB(30, 30, 30)
-        TweenService:Create(knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = targetPos}):Play()
-        TweenService:Create(track, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
-        TweenService:Create(trackStroke, TweenInfo.new(0.2), {Transparency = enabled and 0.4 or 1.0}):Play()
+        tween(knob,  0.2, {Position = enabled and UDim2.new(1,-17,0.5,-7) or UDim2.new(0,3,0.5,-7)}):Play()
+        tween(track, 0.2, {BackgroundColor3 = enabled and T.accent_main or Color3.fromRGB(30,30,30)}):Play()
+        tween(ts,    0.2, {Transparency = enabled and 0.4 or 1}):Play()
     end
 
-    local clickable = Instance.new("TextButton", card)
-    clickable.Size = UDim2.new(1, 0, 1, 0)
-    clickable.BackgroundTransparency = 1
-    clickable.Text = ""
-    clickable.MouseButton1Click:Connect(function()
+    local hit = Instance.new("TextButton", card)
+    hit.Size               = UDim2.new(1, 0, 1, 0)
+    hit.BackgroundTransparency = 1
+    hit.Text               = ""
+    hit.MouseButton1Click:Connect(function()
         enabled = not enabled
         refresh()
         task.spawn(callback, enabled)
     end)
 end
 
--- ─────────────────────────────────────────────
--- Slider
--- ─────────────────────────────────────────────
-function Elements.CreateSlider(parent, text, min, max, default, callback)
-    local card = CreateCard(parent, text)
-    card.Size = UDim2.new(1, -12, 0, 56)
+-- ── Slider ───────────────────────────────────────────────────────────────────
 
-    local valLabel = Instance.new("TextLabel", card)
-    valLabel.Size = UDim2.new(0, 40, 0, 16)
-    valLabel.Position = UDim2.new(1, -48, 0, 6)
-    valLabel.BackgroundTransparency = 1
-    valLabel.TextColor3 = theme.accent_glow
-    valLabel.Font = Enum.Font.SourceSansBold
-    valLabel.TextSize = 12
-    valLabel.Text = tostring(default)
-    valLabel.TextXAlignment = Enum.TextXAlignment.Right
+function E.CreateSlider(parent, text, min, max, default, callback)
+    local card = Card(parent, text, 58)
+
+    local valLbl = Instance.new("TextLabel", card)
+    valLbl.Size            = UDim2.new(0, 40, 0, 16)
+    valLbl.Position        = UDim2.new(1, -48, 0, 6)
+    valLbl.BackgroundTransparency = 1
+    valLbl.TextColor3      = T.accent_glow
+    valLbl.Font            = Enum.Font.SourceSansBold
+    valLbl.TextSize        = 12
+    valLbl.Text            = tostring(default)
+    valLbl.TextXAlignment  = Enum.TextXAlignment.Right
 
     local track = Instance.new("Frame", card)
-    track.Size = UDim2.new(1, -28, 0, 3)
-    track.Position = UDim2.new(0, 14, 0, 36)
+    track.Size            = UDim2.new(1, -28, 0, 3)
+    track.Position        = UDim2.new(0, 14, 0, 38)
     track.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     track.BorderSizePixel = 0
-    Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+    corner(track, 2)
 
     local fill = Instance.new("Frame", track)
-    fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-    fill.BackgroundColor3 = theme.accent_main
+    fill.Size            = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = T.accent_main
     fill.BorderSizePixel = 0
-    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+    corner(fill, 2)
 
     local handle = Instance.new("Frame", track)
-    local pct = (default - min) / (max - min)
-    handle.Size = UDim2.new(0, 10, 0, 10)
-    handle.Position = UDim2.new(pct, -5, 0.5, -5)
-    handle.BackgroundColor3 = theme.accent_glow
+    local pct0   = (default - min) / (max - min)
+    handle.Size            = UDim2.new(0, 10, 0, 10)
+    handle.Position        = UDim2.new(pct0, -5, 0.5, -5)
+    handle.BackgroundColor3 = T.accent_glow
     handle.BorderSizePixel = 0
-    Instance.new("UICorner", handle).CornerRadius = UDim.new(1, 0)
-    AddGlow(handle, theme.accent_glow, 2)
+    corner(handle, 5)
+    stroke(handle, T.accent_glow, 2, 0.3)
 
     local dragging = false
-    local UIS = game:GetService("UserInputService")
-
     handle.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
     end)
@@ -204,51 +186,50 @@ function Elements.CreateSlider(parent, text, min, max, default, callback)
     end)
     UIS.InputChanged:Connect(function(i)
         if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
-            local trackAbs = track.AbsolutePosition
-            local trackSz  = track.AbsoluteSize
-            local rel = math.clamp((i.Position.X - trackAbs.X) / trackSz.X, 0, 1)
+            local abs = track.AbsolutePosition
+            local sz  = track.AbsoluteSize
+            local rel = math.clamp((i.Position.X - abs.X) / sz.X, 0, 1)
             local val = math.floor(min + rel * (max - min))
-            fill.Size = UDim2.new(rel, 0, 1, 0)
+            fill.Size     = UDim2.new(rel, 0, 1, 0)
             handle.Position = UDim2.new(rel, -5, 0.5, -5)
-            valLabel.Text = tostring(val)
+            valLbl.Text   = tostring(val)
             task.spawn(callback, val)
         end
     end)
 end
 
--- ─────────────────────────────────────────────
--- Keybind
--- ─────────────────────────────────────────────
-function Elements.CreateKeybind(parent, text, defaultKey, callback)
-    local card = CreateCard(parent, text)
+-- ── Keybind ──────────────────────────────────────────────────────────────────
+
+function E.CreateKeybind(parent, text, defaultKey, callback)
+    local card      = Card(parent, text)
     local listening = false
-    local currentKey = defaultKey.Name
+    local curKey    = defaultKey.Name
 
-    local bindBtn = Instance.new("TextButton", card)
-    bindBtn.Size = UDim2.new(0, 76, 0, 24)
-    bindBtn.Position = UDim2.new(1, -84, 0.5, -12)
-    bindBtn.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
-    bindBtn.Text = "[" .. currentKey:upper() .. "]"
-    bindBtn.TextColor3 = theme.accent_glow
-    bindBtn.Font = Enum.Font.SourceSansBold
-    bindBtn.TextSize = 11
-    bindBtn.BorderSizePixel = 0
-    Instance.new("UICorner", bindBtn).CornerRadius = UDim.new(0, 2)
-    local bStroke = AddGlow(bindBtn, theme.accent_main, 1)
+    local btn = Instance.new("TextButton", card)
+    btn.Size            = UDim2.new(0, 76, 0, 24)
+    btn.Position        = UDim2.new(1, -84, 0.5, -12)
+    btn.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
+    btn.Text            = "[" .. curKey:upper() .. "]"
+    btn.TextColor3      = T.accent_glow
+    btn.Font            = Enum.Font.SourceSansBold
+    btn.TextSize        = 11
+    btn.BorderSizePixel = 0
+    corner(btn, 2)
+    local bs = stroke(btn, T.accent_main, 1, 0)
 
-    bindBtn.MouseButton1Click:Connect(function()
+    btn.MouseButton1Click:Connect(function()
         if listening then return end
         listening = true
-        bindBtn.Text = "[ ··· ]"
-        TweenService:Create(bStroke, TweenInfo.new(0.2), {Color = theme.accent_glow}):Play()
+        btn.Text  = "[ · · · ]"
+        tween(bs, 0.2, {Color = T.accent_glow}):Play()
 
         local conn
-        conn = game:GetService("UserInputService").InputBegan:Connect(function(input, gp)
+        conn = UIS.InputBegan:Connect(function(input, gp)
             if gp then return end
             if input.UserInputType == Enum.UserInputType.Keyboard then
-                currentKey = input.KeyCode.Name
-                bindBtn.Text = "[" .. currentKey:upper() .. "]"
-                TweenService:Create(bStroke, TweenInfo.new(0.2), {Color = theme.accent_main}):Play()
+                curKey   = input.KeyCode.Name
+                btn.Text = "[" .. curKey:upper() .. "]"
+                tween(bs, 0.2, {Color = T.accent_main}):Play()
                 listening = false
                 conn:Disconnect()
                 task.spawn(callback, input.KeyCode)
@@ -257,18 +238,92 @@ function Elements.CreateKeybind(parent, text, defaultKey, callback)
     end)
 end
 
--- ─────────────────────────────────────────────
--- Label / Section
--- ─────────────────────────────────────────────
-function Elements.CreateLabel(parent, text)
-    local lbl = Instance.new("TextLabel", parent)
-    lbl.Size = UDim2.new(1, -12, 0, 22)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = "  " .. text:upper()
-    lbl.TextColor3 = theme.accent_dim
-    lbl.Font = Enum.Font.SourceSansBold
-    lbl.TextSize = 10
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
+-- ── Dropdown ─────────────────────────────────────────────────────────────────
+
+function E.CreateDropdown(parent, text, options, callback)
+    local card   = Card(parent, text)
+    local open   = false
+    local chosen = options[1] or "Select"
+
+    local selBtn = Instance.new("TextButton", card)
+    selBtn.Size            = UDim2.new(0, 110, 0, 26)
+    selBtn.Position        = UDim2.new(1, -118, 0.5, -13)
+    selBtn.BackgroundColor3 = Color3.fromRGB(18, 5, 5)
+    selBtn.Text            = chosen .. "  ▾"
+    selBtn.TextColor3      = T.accent_glow
+    selBtn.Font            = Enum.Font.SourceSans
+    selBtn.TextSize        = 11
+    selBtn.BorderSizePixel = 0
+    corner(selBtn, 2)
+    stroke(selBtn, T.accent_main, 1, 0)
+
+    -- Dropdown listesi (parent frame içinde aşağı açılır)
+    local list = Instance.new("Frame", card)
+    list.Size            = UDim2.new(0, 110, 0, 0)
+    list.Position        = UDim2.new(1, -118, 1, 2)
+    list.BackgroundColor3 = Color3.fromRGB(12, 3, 3)
+    list.BorderSizePixel = 0
+    list.ClipsDescendants = true
+    list.ZIndex          = 10
+    corner(list, 3)
+    stroke(list, T.accent_main, 1, 0)
+
+    local listLayout = Instance.new("UIListLayout", list)
+    listLayout.Padding = UDim.new(0, 1)
+
+    for _, opt in ipairs(options) do
+        local optBtn = Instance.new("TextButton", list)
+        optBtn.Size            = UDim2.new(1, 0, 0, 26)
+        optBtn.BackgroundColor3 = Color3.fromRGB(16, 4, 4)
+        optBtn.Text            = opt
+        optBtn.TextColor3      = T.text_dark
+        optBtn.Font            = Enum.Font.SourceSans
+        optBtn.TextSize        = 11
+        optBtn.BorderSizePixel = 0
+        optBtn.ZIndex          = 11
+
+        optBtn.MouseEnter:Connect(function()
+            tween(optBtn, 0.1, {BackgroundColor3 = Color3.fromRGB(30, 8, 8), TextColor3 = T.accent_glow}):Play()
+        end)
+        optBtn.MouseLeave:Connect(function()
+            tween(optBtn, 0.1, {BackgroundColor3 = Color3.fromRGB(16, 4, 4), TextColor3 = T.text_dark}):Play()
+        end)
+        optBtn.MouseButton1Click:Connect(function()
+            chosen       = opt
+            selBtn.Text  = opt .. "  ▾"
+            open         = false
+            tween(list, 0.2, {Size = UDim2.new(0, 110, 0, 0)}):Play()
+            task.spawn(callback, opt)
+        end)
+    end
+
+    selBtn.MouseButton1Click:Connect(function()
+        open = not open
+        local targetH = open and (#options * 27) or 0
+        tween(list, 0.2, {Size = UDim2.new(0, 110, 0, targetH)}):Play()
+    end)
 end
 
-return Elements
+-- ── Label / Section ──────────────────────────────────────────────────────────
+
+function E.CreateLabel(parent, text)
+    local lbl = Instance.new("TextLabel", parent)
+    lbl.Size               = UDim2.new(1, -12, 0, 20)
+    lbl.BackgroundTransparency = 1
+    lbl.Text               = "  " .. text:upper()
+    lbl.TextColor3         = T.accent_dim
+    lbl.Font               = Enum.Font.SourceSansBold
+    lbl.TextSize           = 10
+    lbl.TextXAlignment     = Enum.TextXAlignment.Left
+end
+
+-- ── Separator ────────────────────────────────────────────────────────────────
+
+function E.CreateSeparator(parent)
+    local sep = Instance.new("Frame", parent)
+    sep.Size            = UDim2.new(1, -12, 0, 1)
+    sep.BackgroundColor3 = T.border_color
+    sep.BorderSizePixel = 0
+end
+
+return E
