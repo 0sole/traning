@@ -1,67 +1,57 @@
 local theme = _G.DragoTheme
-local elements = _G.DragoElements
 local Menu = {}
 
-function Menu:CreateWindow(config)
-    local sgui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-    
-    -- Ana Pencere
-    local main = Instance.new("Frame", sgui)
-    main.Size = theme.window_size
-    main.Position = UDim2.new(0.5, -310, 0.5, -195)
-    main.BackgroundColor3 = theme.bg_deep
-    main.ClipsDescendants = true
+function Menu:CreateWindow(name)
+    -- 1. Ana Ekran (ScreenGui)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "DragoLib"
+    ScreenGui.Parent = game:GetService("CoreGui") -- Exploitler için en iyisi budur
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- Üstteki Parlayan Çizgi (Ejderha Gözü Hattı)
-    local topLine = Instance.new("Frame", main)
-    topLine.Size = UDim2.new(1, 0, 0, 2)
-    topLine.BackgroundColor3 = theme.accent_glow
-    Instance.new("UIGradient", topLine).Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.5, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    })
+    -- 2. Ana Pencere (Main Frame)
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = theme.window_size
+    MainFrame.Position = UDim2.new(0.5, -310, 0.5, -195)
+    MainFrame.BackgroundColor3 = theme.bg_deep
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
 
-    -- Sidebar
-    local sidebar = Instance.new("Frame", main)
-    sidebar.Size = UDim2.new(0, 170, 1, 0)
-    sidebar.BackgroundColor3 = theme.bg_sidebar
-    sidebar.BorderSizePixel = 0
+    -- Köşeleri yuvarla
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = MainFrame
 
-    local title = Instance.new("TextLabel", sidebar)
-    title.Text = "DRAGO ENO"
-    title.Size = UDim2.new(1, 0, 0, 60)
-    title.TextColor3 = theme.accent_glow
-    title.Font = Enum.Font.SourceSansBold
-    title.TextSize = 18
+    -- Elemanların ekleneceği bir konteyner (Container)
+    local ElementContainer = Instance.new("ScrollingFrame")
+    ElementContainer.Name = "Container"
+    ElementContainer.Size = UDim2.new(1, -20, 1, -50)
+    ElementContainer.Position = UDim2.new(0, 10, 0, 40)
+    ElementContainer.BackgroundTransparency = 1
+    ElementContainer.Parent = MainFrame
 
-    -- İçerik Alanı
-    local container = Instance.new("ScrollingFrame", main)
-    container.Position = UDim2.new(0, 180, 0, 30)
-    container.Size = UDim2.new(1, -190, 1, -40)
-    container.BackgroundTransparency = 1
-    container.ScrollBarThickness = 2
-    
-    local layout = Instance.new("UIListLayout", container)
-    layout.Padding = UDim.new(0, 10)
+    local Window = {
+        Instance = MainFrame,
+        Container = ElementContainer
+    }
 
-    local window = {}
-    function window:CreateTab(name)
-        local tab = {}
-        -- Sidebar Butonu (tab-link)
-        local tBtn = Instance.new("TextButton", sidebar)
-        tBtn.Size = UDim2.new(1, -20, 0, 35)
-        tBtn.Position = UDim2.new(0, 10, 0, 70 + (#sidebar:GetChildren()*40))
-        tBtn.Text = name
-        tBtn.BackgroundColor3 = theme.accent_main
-        tBtn.BackgroundTransparency = 0.9
+    -- Tab oluşturma fonksiyonu
+    function Window:CreateTab(tabName)
+        local Tab = {
+            Name = tabName,
+            ParentWindow = Window
+        }
 
-        function tab:CreateButton(btnName, callback)
-            elements.CreateButton(container, btnName, callback)
+        -- Buton oluşturma fonksiyonunu bağla
+        function Tab:CreateButton(text, callback)
+            -- elements.lua'daki fonksiyonu çağırıyoruz
+            return _G.DragoElements.CreateButton(ElementContainer, text, callback)
         end
-        return tab
+
+        return Tab
     end
-    return window
+
+    return Window
 end
 
 return Menu
