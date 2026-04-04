@@ -12,6 +12,16 @@ function Elements.CreateButton(parent, text, callback)
 
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 2)
 
+
+    -- Elements.CreateButton fonksiyonunun dışına, dosyanın başına veya sonuna:
+function Elements.SetupLayout(parent)
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = parent
+    layout.Padding = UDim.new(0, 5)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+end
+    
+    
     local label = Instance.new("TextLabel")
     label.Text = text
     label.Size = UDim2.new(0.6, 0, 1, 0)
