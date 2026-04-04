@@ -1,54 +1,83 @@
 local theme = _G.DragoTheme
+local TweenService = game:GetService("TweenService")
 local Elements = {}
 
-function Elements.CreateButton(parent, text, callback)
-    -- Element Kartı (drago-element-card)
-    local card = Instance.new("Frame")
+-- Ortak Kart Yapısı
+local function CreateCard(parent, text)
+    local card = Instance.new("Frame", parent)
     card.Size = UDim2.new(1, -10, 0, 45)
     card.BackgroundColor3 = theme.bg_element
+    card.BorderColor3 = Color3.fromRGB(35, 35, 35)
     card.BorderSizePixel = 1
-    card.BorderColor3 = Color3.fromRGB(42, 0, 0) -- --border-color
-    card.Parent = parent
-
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 2)
-
-
-    -- Elements.CreateButton fonksiyonunun dışına, dosyanın başına veya sonuna:
-function Elements.SetupLayout(parent)
-    local layout = Instance.new("UIListLayout")
-    layout.Parent = parent
-    layout.Padding = UDim.new(0, 5)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-end
     
-    
-    local label = Instance.new("TextLabel")
+    local label = Instance.new("TextLabel", card)
     label.Text = text
-    label.Size = UDim2.new(0.6, 0, 1, 0)
+    label.Size = UDim2.new(0.5, 0, 1, 0)
     label.Position = UDim2.new(0, 15, 0, 0)
     label.TextColor3 = theme.text_dark
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.BackgroundTransparency = 1
-    label.Parent = card
+    
+    -- Hover Animasyonu
+    card.MouseEnter:Connect(function()
+        TweenService:Create(card, TweenInfo.new(0.2), {BorderColor3 = theme.accent_main}):Play()
+    end)
+    card.MouseLeave:Connect(function()
+        TweenService:Create(card, TweenInfo.new(0.2), {BorderColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+    end)
+    
+    return card
+end
 
-    -- Drago Button (drago-btn)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 100, 0, 25)
-    btn.Position = UDim2.new(1, -110, 0.5, -12)
+function Elements.CreateButton(parent, text, callback)
+    local card = CreateCard(parent, text)
+    
+    local btn = Instance.new("TextButton", card)
+    btn.Size = UDim2.new(0, 100, 0, 28)
+    btn.Position = UDim2.new(1, -110, 0.5, -14)
     btn.BackgroundColor3 = theme.accent_main
     btn.Text = "EXECUTE"
     btn.TextColor3 = theme.text_main
     btn.Font = Enum.Font.SourceSansBold
-    btn.Parent = card
-
+    btn.BorderSizePixel = 0
+    
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 2)
 
     btn.MouseButton1Click:Connect(function()
-        -- HTML'deki :active efekti için küçük bir görsel geri bildirim
+        -- Click Efekti
         btn.BackgroundColor3 = theme.accent_glow
         task.wait(0.1)
-        btn.BackgroundColor3 = theme.accent_main
+        TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = theme.accent_main}):Play()
         callback()
+    end)
+end
+
+function Elements.CreateKeybind(parent, text, defaultKey, callback)
+    local card = CreateCard(parent, text)
+    local listening = false
+    local currentKey = defaultKey.Name
+
+    local bindBtn = Instance.new("TextButton", card)
+    bindBtn.Size = UDim2.new(0, 80, 0, 25)
+    bindBtn.Position = UDim2.new(1, -90, 0.5, -12)
+    bindBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    bindBtn.Text = currentKey:upper()
+    bindBtn.TextColor3 = theme.accent_glow
+    bindBtn.BorderColor3 = theme.accent_main
+    
+    bindBtn.MouseButton1Click:Connect(function()
+        listening = true
+        bindBtn.Text = "..."
+        local connection
+        connection = game:GetService("UserInputService").InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.Keyboard then
+                currentKey = input.KeyCode.Name
+                bindBtn.Text = currentKey:upper()
+                listening = false
+                callback(input.KeyCode)
+                connection:Disconnect()
+            end
+        end)
     end)
 end
 
