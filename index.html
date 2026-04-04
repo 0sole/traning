@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drago Eno UI Library</title>
+    <style>
+        /* TEMA DEĞİŞKENLERİ - DRAGO ENO EDITION */
+        :root {
+            --bg-deep: #050505;       /* Çok derin siyah (Ejderha pulu arası) */
+            --bg-sidebar: #0a0000;    /* Çok koyu kırmızıya çalan siyah */
+            --bg-element: #111111;    /* Element arka planı */
+            --accent-main: #880000;   /* Kan Kırmızısı (Ana renk) */
+            --accent-glow: #ff0000;   /* Canlı Kırmızı (Parlamalarda) */
+            --text-main: #ffffff;
+            --text-dark: #888888;
+            --border-color: #2a0000;  /* Koyu kırmızımsı sınır */
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Akışkan animasyon */
+        }
+
+        body {
+            /* Arka planda hafif ateş parlaması hissi */
+            background: radial-gradient(circle at center, #1a0000 0%, #000000 100%);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* ANA PENCERE - DRAGO ENO WINDOW */
+        .drago-window {
+            width: 620px;
+            height: 390px;
+            background: var(--bg-deep);
+            border: 1px solid var(--border-color);
+            border-radius: 4px; /* Keskin, ejderha dişi gibi hatlar */
+            display: flex;
+            overflow: hidden;
+            /* Güçlü kırmızı gölge (Parlayan ejderha gözü efekti) */
+            box-shadow: 0 10px 50px rgba(136, 0, 0, 0.3);
+            position: relative;
+        }
+
+        /* Tepedeki kırmızı ince çizgi */
+        .drago-window::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+        }
+
+        /* SIDEBAR (SOL PANEL) */
+        .sidebar {
+            width: 170px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 10px;
+        }
+
+        .lib-title {
+            color: var(--accent-glow);
+            font-size: 16px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            /* Hafif yazı parlaması */
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+        }
+
+        .tab-link {
+            background: transparent;
+            border: none;
+            color: var(--text-dark);
+            padding: 12px 15px;
+            text-align: left;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 2px;
+            margin-bottom: 5px;
+            transition: var(--transition);
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .tab-link:hover {
+            background: rgba(136, 0, 0, 0.1);
+            color: var(--text-main);
+        }
+
+        .tab-link.active {
+            background: rgba(136, 0, 0, 0.15);
+            color: var(--accent-glow);
+            font-weight: bold;
+        }
+
+        /* Aktif tabın solundaki parlayan çizgi */
+        .tab-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 15%;
+            height: 70%;
+            width: 3px;
+            background: var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* İÇERİK ALANI */
+        .main-content {
+            flex: 1;
+            padding: 25px;
+            position: relative;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyYTAwMDAiIGZpbGwtb3BhY2l0eT0iMC4yIj48cGF0aCBkPSJNMCAwaDg0djI0SDBWMHptMjQgMjRoMjR2MjRIMjRWMjR6TTAgMjRoMjR2MjRIMFYyNHptMjQgNDhoMjR2MjRIMjRWMzZ6TTAgNzJoMjR2MjRIMFY3MnpmMjQgNDhoMjR2MjRIMjRWMjR6TTAgNDhoMjR2MjRIMFY0OHptMjQtMjRoMjR2MjRIMjRWMjR6TTAgMjRoMjR2MjRIMFYyNHptMjQgNDhoMjR2MjRIMjRWMzZ6TTAgNzJoMjR2MjRIMFY3MnpmNDggMEg0OHY4NEg0OFYwek0zNiAyNGgyNHYyNEgzNlYyNHptNDggNDhoMjR2MjRIODRWNzJ6TTQ4IDQ4aDI0djI0SDQ4VjQ4em00OCA0OGgyNHYyNEg0OFY5NnpNMzYgNzJoMjR2MjRIMzZWMzZ6TTQ4IDI0aDI0djI0SDQ4VjI0em00OCA0OGgyNHYyNEg0OFY3MnpmMzYtMjRoMjR2MjRIMzZWMjR6TTAgNDhoMjR2MjRIMFY0OHptNDggMEg0OGg4NEg0OFYwek0zNiAyNGgyNHYyNEgzNlYyNHptNDggNDhoMjR2MjRIODRWNzJ6TTQ4IDQ4aDI0djI0SDQ4Vj44em00OCA0OGgyNHYyNEg0OFY5NnpNMzYgNzJoMjR2MjRIMzZWMzZ6TTQ4IDI0aDI0djI0SDQ4VjI0em00OCA0OGgyNHYyNEg0OFY3MnpNMzYgMjRoMjR2MjRIMzZWMjR6TTAgMjRoMjR2MjRIMFYyNHptMjQgNDhoMjR2MjRIMjRWMzZ6TTAgNzJoMjR2MjRIMFY3MnpmMjQgNDhoMjR2MjRIMjRWMjR6TTAgNDhoMjR2MjRIMFY0OHptMjQtMjRoMjR2MjRIMjRWMjR6TTAgMjRoMjR2MjRIMFYyNHptMjQgNDhoMjR2MjRIMjRWMzZ6TTAgNzJoMjR2MjRIMFY3MnpNMzYgNDhoMjR2MjRIMzZWMzh6TTcyIDk2aDI0djI0SDcyVjk2em0wLTQ4aDI0djI0SDcyVjQ4em0wLTQ4aDI0djI0SDcyVjB6TTQ4IDcyaDI0djI0SDQ4Vjd6em0wLTQ4aDI0djI0SD44VjI0em0wLTQ4aDI0djI0SD44VjB6TTI0IDcyaDI0djI0SDI0Vjd6em0wLTQ4aDI0djI0SDI0VjI0em0wLTQ4aDI0djI0SDI0VjB6TTAtMEgyNHYyNEgwaDAgeiIvPjwvZz48L2c+PC9zdmc+');
+            /* Çok hafif geometrik doku (opsiyonel) */
+        }
+
+        .page {
+            display: none;
+            /* Sayfa değişim animasyonu - Sağdan kayma ve fade */
+            animation: dragoPageIn 0.4s var(--transition);
+        }
+
+        @keyframes dragoPageIn {
+            from { opacity: 0; transform: translateX(15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .section-title {
+            font-size: 19px;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        /* ELEMENTLER (BOŞ ŞABLONLAR) */
+        .drago-element-card {
+            background: var(--bg-element);
+            border: 1px solid rgba(136,0,0,0.1); /* Hafif kırmızımsı sınır */
+            padding: 15px;
+            border-radius: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            transition: 0.2s;
+        }
+
+        /* Üzerine gelince parlayan sınır */
+        .drago-element-card:hover {
+            border-color: rgba(255,0,0,0.4);
+            transform: translateY(-1px);
+        }
+
+        .element-label {
+            color: #ccc;
+            font-size: 13px;
+        }
+
+        /* DRAGO ENO BUTTON */
+        .drago-btn {
+            background: var(--accent-main);
+            border: 1px solid transparent;
+            color: var(--text-main);
+            padding: 7px 16px;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drago-btn:hover {
+            background: var(--accent-glow);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .drago-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Basit bir parlama efekti için */
+        .drago-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(rgba(255,255,255,0.1), transparent, rgba(255,255,255,0.1));
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+        .drago-btn:hover::after {
+            left: 120%;
+        }
+
+        /* KEYBIND ÖZEL STİL */
+        .keybind-box {
+            background: #1a1a1a;
+            border: 1px solid var(--accent-main);
+            color: var(--accent-glow);
+            padding: 4px 10px;
+            min-width: 50px;
+            text-align: center;
+            border-radius: 2px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+
+        .keybind-box:hover {
+            box-shadow: 0 0 8px var(--accent-main);
+        }
+
+        .keybind-box.listening {
+            color: #fff;
+            border-color: #fff;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Checkbox Test Element */
+        input[type="checkbox"] {
+            accent-color: var(--accent-glow);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="drago-window">
+        <div class="sidebar">
+            <div class="lib-title">DRAGO ENO</div>
+            <button class="tab-link active" onclick="switchPage(event, 'p1')">Tab 1</button>
+            <button class="tab-link" onclick="switchPage(event, 'p2')">Tab 2</button>
+            <button class="tab-link" onclick="switchPage(event, 'p3')">Tab 3</button>
+            <div style="margin-top:auto; color: #440000; font-size: 10px; text-align: center;">v1.0</div>
+        </div>
+
+        <div class="main-content">
+            
+            <div id="p1" class="page" style="display: block;">
+                <div class="section-title">Section 1</div>
+                
+                <div class="drago-element-card">
+                    <span class="element-label">Menu Toggle Bind</span>
+                    <div class="keybind-box" id="kb1" onclick="startBinding('kb1')">RightShift</div>
+                </div>
+
+                <div class="drago-element-card">
+                    <span class="element-label">Test Button Element</span>
+                    <button class="drago-btn">Test 1</button>
+                </div>
+                
+                <div class="drago-element-card">
+                    <span class="element-label">Test Toggle Element</span>
+                    <input type="checkbox">
+                </div>
+            </div>
+
+            <div id="p2" class="page">
+                <div class="section-title">Section 2</div>
+                <div style="color: var(--text-dark); font-size: 13px; font-style: italic;">
+                    Buraya Test 3, Test 4 gelecek...
+                </div>
+            </div>
+
+            <div id="p3" class="page">
+                <div class="section-title">Settings [Test]</div>
+                <div class="drago-element-card">
+                    <span class="element-label">Danger Zone Action</span>
+                    <button class="drago-btn" style="background:#cc4444">Destroy</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Sayfa Değiştirme Mantığı
+        function switchPage(evt, pageId) {
+            const pages = document.getElementsByClassName("page");
+            for (let i = 0; i < pages.length; i++) {
+                pages[i].style.display = "none";
+            }
+
+            const links = document.getElementsByClassName("tab-link");
+            for (let i = 0; i < links.length; i++) {
+                links[i].classList.remove("active");
+            }
+
+            document.getElementById(pageId).style.display = "block";
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Keybind Yakalama Mantığı
+        function startBinding(id) {
+            const btn = document.getElementById(id);
+            btn.innerHTML = "...";
+            btn.classList.add("listening");
+
+            const listener = (e) => {
+                // Boşluk tuşu özel kontrolü
+                let keyName = e.key === " " ? "Space" : e.key;
+                btn.innerHTML = keyName.toUpperCase();
+                btn.classList.remove("listening");
+                window.removeEventListener('keydown', listener);
+            };
+
+            window.addEventListener('keydown', listener);
+        }
+    </script>
+
+</body>
+</html>
