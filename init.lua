@@ -1,35 +1,20 @@
 local baseUrl = "https://raw.githubusercontent.com/0sole/traning/refs/heads/main/"
 
-local function fetch(file)
-    return game:HttpGet(baseUrl .. file)
+-- HttpGet ile güvenli yükleme
+local function safeLoadFromGithub(filename)
+    local success, result = pcall(function()
+        return game:HttpGet(baseUrl .. filename)
+    end)
+    if not success then
+        error("Hata: " .. filename .. " yüklenemedi!")
+    end
+    return result
 end
 
--- Dosyaların birbirini bulabilmesi için sanal bir yapı oluşturuyoruz
-local VirtualProject = Instance.new("Folder")
-VirtualProject.Name = "MyProject"
-VirtualProject.Parent = game:GetService("CoreGui")
+-- Kütüphaneyi çek ve global yap
+local libraryCode = safeLoadFromGithub("Library.lua")
+getgenv().Library = loadstring(libraryCode)()
 
--- 1. Library.lua dosyasını yükle
-local LibraryScript = Instance.new("ModuleScript")
-LibraryScript.Name = "Library"
-LibraryScript.Source = fetch("Library.lua")
-LibraryScript.Parent = VirtualProject
-
--- 2. main.lua dosyasını yükle
-local MainScript = Instance.new("ModuleScript")
-MainScript.Name = "main"
-MainScript.Source = fetch("main.lua")
-MainScript.Parent = VirtualProject
-
--- 3. Projeyi başlat
-local success, MainModule = pcall(function()
-    return require(MainScript)
-end)
-
-if success and MainModule.Initialize then
-    MainModule:Initialize()
-    print("Proje başarıyla yüklendi!")
-else
-    -- Eğer main.lua bir tablo döndürmüyorsa direkt çalıştır
-    loadstring(MainScript.Source)()
-end
+-- Main scripti çalıştır
+local mainCode = safeLoadFromGithub("main.lua")
+loadstring(mainCode)()
