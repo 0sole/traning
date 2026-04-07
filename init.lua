@@ -1,20 +1,17 @@
 local baseUrl = "https://raw.githubusercontent.com/0sole/traning/refs/heads/main/"
 
--- HttpGet ile güvenli yükleme
-local function safeLoadFromGithub(filename)
+local function safeLoad(filename)
     local success, result = pcall(function()
         return game:HttpGet(baseUrl .. filename)
     end)
-    if not success then
-        error("Hata: " .. filename .. " yüklenemedi!")
-    end
+    if not success then return nil end
     return result
 end
 
--- Kütüphaneyi çek ve global yap
-local libraryCode = safeLoadFromGithub("Library.lua")
-getgenv().Library = loadstring(libraryCode)()
-
--- Main scripti çalıştır
-local mainCode = safeLoadFromGithub("main.lua")
-loadstring(mainCode)()
+-- Sadece main.lua'yı yükle, Fluent zaten main içinde çağrılıyor
+local mainCode = safeLoad("main.lua")
+if mainCode then
+    loadstring(mainCode)()
+else
+    warn("Main script yüklenemedi!")
+end

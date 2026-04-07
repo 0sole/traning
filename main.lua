@@ -2,26 +2,25 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
--- [ AYARLAR VE KAYIT SİSTEMİ ]
+-- [ VERİ YÖNETİMİ ]
 local HttpService = game:GetService("HttpService")
-local FileName = "0sole_Items.json"
+local FileName = "0sole_Config.json"
 local AddedItems = {}
+local ToggleObjects = {} -- UI objelerini saklamak için
 
--- Dosyadan itemleri yükleme fonksiyonu
-local function LoadSavedItems()
+local function SaveData()
+    writefile(FileName, HttpService:JSONEncode(AddedItems))
+end
+
+local function LoadData()
     if isfile(FileName) then
-        local success, data = pcall(function() return HttpService:JSONDecode(readfile(FileName)) end)
-        if success then return data end
+        local s, data = pcall(function() return HttpService:JSONDecode(readfile(FileName)) end)
+        if s then return data end
     end
     return {}
 end
 
--- İtemleri dosyaya kaydetme fonksiyonu
-local function SaveItems()
-    writefile(FileName, HttpService:JSONEncode(AddedItems))
-end
-
--- [ PENCERE KURULUMU ]
+-- [ PENCERE ]
 local Window = Fluent:CreateWindow({
     Title = "Proje v2",
     SubTitle = "by 0sole",
@@ -37,72 +36,75 @@ local Tabs = {
     Misc = Window:AddTab({ Title = "Misc", Icon = "settings" })
 }
 
--- [ ITEMS SEKMESİ ]
 local ListSection = Tabs.Items:AddSection("Eklenen Eşyalar")
 local ItemNameInput = ""
 
--- İtem ekleme ana fonksiyonu
+-- [ GLOW VE TOGGLE FONKSİYONU ]
 local function CreateItemUI(name)
-    ListSection:AddToggle("item_" .. name, {
+    -- Fluent'te Glow etkisi: Toggle Mavi olduğunda "parlar"
+    local Tgl = ListSection:AddToggle("item_" .. name, {
         Title = "🔵 " .. name,
+        Description = "Otomatik aranıyor...",
         Default = false,
-        Callback = function(Value)
-            print(name .. " durumu: " .. tostring(Value))
-        end
+        Callback = function(Value) end -- Manuel müdahaleye gerek yok, loop halledecek
     })
+    ToggleObjects[name] = Tgl
 end
 
 Tabs.Items:AddInput("ItemInput", {
     Title = "Eşya İsmi",
     Default = "",
-    Placeholder = "İsim yazın...",
+    Placeholder = "Örn: Goggles",
     Callback = function(Value) ItemNameInput = Value end
 })
 
 Tabs.Items:AddButton({
     Title = "Ekle (Add)",
-    Description = "Listeye kaydeder ve kalıcı hale getirir.",
+    Description = "Mavi parlamalı listeye ekler.",
     Callback = function()
         if ItemNameInput == "" or table.find(AddedItems, ItemNameInput) then return end
-        
         table.insert(AddedItems, ItemNameInput)
-        SaveItems() -- Listeyi dosyaya yaz
-        CreateItemUI(ItemNameInput) -- Arayüze ekle
-        
-        Fluent:Notify({Title = "Başarılı", Content = ItemNameInput .. " eklendi ve kaydedildi.", Duration = 2})
+        SaveData()
+        CreateItemUI(ItemNameInput)
+        Fluent:Notify({Title = "Sistem", Content = ItemNameInput .. " eklendi.", Duration = 2})
     end
 })
 
--- Sayfa açıldığında kayıtlı itemleri yükle
-AddedItems = LoadSavedItems()
-for _, name in ipairs(AddedItems) do
-    CreateItemUI(name)
-end
+-- [ 0.5 SN OTOMATİK KONTROL ]
+task.spawn(function()
+    while task.wait(0.5) do
+        local player = game.Players.LocalPlayer
+        local char = player.Character
+        local backpack = player.Backpack
 
--- [ MISC SEKMESİ ]
-local MiscSection = Tabs.Misc:AddSection("Arayüz Ayarları")
+        for _, name in ipairs(AddedItems) do
+            local found = (char and char:FindFirstChild(name)) or (backpack and backpack:FindFirstChild(name))
+            
+            if ToggleObjects[name] then
+                if found and not ToggleObjects[name].Value then
+                    ToggleObjects[name]:SetValue(true) -- Mavi Glow AÇIK
+                elseif not found and ToggleObjects[name].Value then
+                    ToggleObjects[name]:SetValue(false) -- Glow KAPALI
+                end
+            end
+        end
+    end
+end)
 
-MiscSection:AddKeybind("MenuKeybind", {
-    Title = "Menü Kapatma Tuşu",
+-- Kayıtlıları yükle
+AddedItems = LoadData()
+for _, n in ipairs(AddedItems) do CreateItemUI(n) end
+
+-- [ MISC - HATALARI DÜZELTİLMİŞ ]
+local MiscSection = Tabs.Misc:AddSection("Arayüz")
+
+MiscSection:AddKeybind("MenuKey", {
+    Title = "Menü Tuşu",
     Mode = "Toggle", 
     Default = "LeftControl",
     ChangedCallback = function(New)
-        Window:SetMinimizeKey(New) -- Doğru kullanım budur
+        Window:SetMinimizeKey(New) -- Boolean hatasını çözen doğru komut
     end
 })
 
--- Kütüphane Yöneticileri
-SaveManager:SetLibrary(Fluent)
-InterfaceManager:SetLibrary(Fluent)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({"ItemInput", "MenuKeybind"})
-InterfaceManager:BuildInterfaceSection(Tabs.Misc)
-SaveManager:BuildConfigSection(Tabs.Misc)
-
 Window:SelectTab(1)
-
-Fluent:Notify({
-    Title = "Hazır!",
-    Content = "Kayıtlı " .. #AddedItems .. " eşya yüklendi.",
-    Duration = 3
-})
