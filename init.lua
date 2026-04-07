@@ -1,34 +1,35 @@
--- GitHub Kullanıcı Bilgilerin
-local baseUrl = "https://raw.githubusercontent.com/0sole/traning/refs/heads/main/init.lua"
+local baseUrl = "https://raw.githubusercontent.com/0sole/traning/refs/heads/main/"
 
 local function fetch(file)
     return game:HttpGet(baseUrl .. file)
 end
 
--- 1. Sanal bir klasör oluştur (require'ın çalışması için)
+-- Dosyaların birbirini bulabilmesi için sanal bir yapı oluşturuyoruz
 local VirtualProject = Instance.new("Folder")
 VirtualProject.Name = "MyProject"
-VirtualProject.Parent = game:GetService("CoreGui") -- Gizli tutmak için
+VirtualProject.Parent = game:GetService("CoreGui")
 
--- 2. Library Dosyasını Yükle
+-- 1. Library.lua dosyasını yükle
 local LibraryScript = Instance.new("ModuleScript")
 LibraryScript.Name = "Library"
 LibraryScript.Source = fetch("Library.lua")
 LibraryScript.Parent = VirtualProject
 
--- 3. Main Dosyasını Yükle
+-- 2. main.lua dosyasını yükle
 local MainScript = Instance.new("ModuleScript")
 MainScript.Name = "main"
 MainScript.Source = fetch("main.lua")
 MainScript.Parent = VirtualProject
 
--- 4. Çalıştır
-local MainModule = require(MainScript)
-if MainModule.Initialize then
+-- 3. Projeyi başlat
+local success, MainModule = pcall(function()
+    return require(MainScript)
+end)
+
+if success and MainModule.Initialize then
     MainModule:Initialize()
+    print("Proje başarıyla yüklendi!")
 else
-    -- Eğer main.lua direkt çalışıyorsa:
+    -- Eğer main.lua bir tablo döndürmüyorsa direkt çalıştır
     loadstring(MainScript.Source)()
 end
-
-print("Proje başarıyla yüklendi!")
