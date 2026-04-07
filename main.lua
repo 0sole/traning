@@ -2,6 +2,26 @@ local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
+-- [ AYARLAR VE KAYIT SİSTEMİ ]
+local HttpService = game:GetService("HttpService")
+local FileName = "0sole_Items.json"
+local AddedItems = {}
+
+-- Dosyadan itemleri yükleme fonksiyonu
+local function LoadSavedItems()
+    if isfile(FileName) then
+        local success, data = pcall(function() return HttpService:JSONDecode(readfile(FileName)) end)
+        if success then return data end
+    end
+    return {}
+end
+
+-- İtemleri dosyaya kaydetme fonksiyonu
+local function SaveItems()
+    writefile(FileName, HttpService:JSONEncode(AddedItems))
+end
+
+-- [ PENCERE KURULUMU ]
 local Window = Fluent:CreateWindow({
     Title = "Proje v2",
     SubTitle = "by 0sole",
@@ -12,94 +32,70 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Sekmeler
 local Tabs = {
     Items = Window:AddTab({ Title = "Eşya Ekle", Icon = "plus-circle" }),
     Misc = Window:AddTab({ Title = "Misc", Icon = "settings" })
 }
 
--- Değişkenler
+-- [ ITEMS SEKMESİ ]
+local ListSection = Tabs.Items:AddSection("Eklenen Eşyalar")
 local ItemNameInput = ""
 
--- [ ITEMS SEKMESİ ]
-local InputSection = Tabs.Items:AddSection("Yeni Eşya Oluştur")
+-- İtem ekleme ana fonksiyonu
+local function CreateItemUI(name)
+    ListSection:AddToggle("item_" .. name, {
+        Title = "🔵 " .. name,
+        Default = false,
+        Callback = function(Value)
+            print(name .. " durumu: " .. tostring(Value))
+        end
+    })
+end
 
-local ItemInput = InputSection:AddInput("ItemName", {
+Tabs.Items:AddInput("ItemInput", {
     Title = "Eşya İsmi",
     Default = "",
     Placeholder = "İsim yazın...",
-    Numeric = false,
-    Finished = false,
-    Callback = function(Value)
-        ItemNameInput = Value
-    end
+    Callback = function(Value) ItemNameInput = Value end
 })
 
--- Eşyaların ekleneceği liste alanı
-local ListSection = Tabs.Items:AddSection("Eklenen Eşyalar")
-
-InputSection:AddButton({
+Tabs.Items:AddButton({
     Title = "Ekle (Add)",
-    Description = "Yazdığınız ismi listeye mavi parlamayla ekler.",
+    Description = "Listeye kaydeder ve kalıcı hale getirir.",
     Callback = function()
-        if ItemNameInput == "" then 
-            Fluent:Notify({Title = "Hata", Content = "Lütfen bir isim girin!", Duration = 3})
-            return 
-        end
-
-        -- Yeni İtem Toggle Olarak Ekleniyor (Mavi parlamalı/temalı)
-        ListSection:AddToggle(ItemNameInput, {
-            Title = "🔵 " .. ItemNameInput, 
-            Default = false,
-            Callback = function(State)
-                print(ItemNameInput .. " durumu: " .. tostring(State))
-                -- Buraya item açıldığında ne olmasını istiyorsan o kodu yazabilirsin
-            end
-        })
-
-        Fluent:Notify({
-            Title = "Başarılı",
-            Content = ItemNameInput .. " listeye eklendi.",
-            Duration = 2
-        })
+        if ItemNameInput == "" or table.find(AddedItems, ItemNameInput) then return end
+        
+        table.insert(AddedItems, ItemNameInput)
+        SaveItems() -- Listeyi dosyaya yaz
+        CreateItemUI(ItemNameInput) -- Arayüze ekle
+        
+        Fluent:Notify({Title = "Başarılı", Content = ItemNameInput .. " eklendi ve kaydedildi.", Duration = 2})
     end
 })
+
+-- Sayfa açıldığında kayıtlı itemleri yükle
+AddedItems = LoadSavedItems()
+for _, name in ipairs(AddedItems) do
+    CreateItemUI(name)
+end
 
 -- [ MISC SEKMESİ ]
-local MiscSection = Tabs.Misc:AddSection("Genel Ayarlar")
+local MiscSection = Tabs.Misc:AddSection("Arayüz Ayarları")
 
--- Menü Gizleme Tuşu (Keybind)
-MiscSection:AddKeybind("MenuKey", {
+MiscSection:AddKeybind("MenuKeybind", {
     Title = "Menü Kapatma Tuşu",
-    Mode = "Toggle",
+    Mode = "Toggle", 
     Default = "LeftControl",
-    Callback = function(Value)
-        print("Menü tuşu değiştirildi: " .. Value)
-    end,
     ChangedCallback = function(New)
-        Window.MinimizeKey = New
+        Window:SetMinimizeKey(New) -- Doğru kullanım budur
     end
 })
 
--- PANIC BUTTON (Her şeyi siler)
-MiscSection:AddButton({
-    Title = "PANIC BUTTON",
-    Description = "Tüm arayüzü yok eder ve scripti durdurur.",
-    Callback = function()
-        Window:Destroy()
-        Fluent:Notify({
-            Title = "Panic!",
-            Content = "Tüm sistemler kapatıldı.",
-            Duration = 5
-        })
-    end
-})
-
--- Config Ayarları (Fluent standardı)
+-- Kütüphane Yöneticileri
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
+SaveManager:SetIgnoreIndexes({"ItemInput", "MenuKeybind"})
 InterfaceManager:BuildInterfaceSection(Tabs.Misc)
 SaveManager:BuildConfigSection(Tabs.Misc)
 
@@ -107,6 +103,6 @@ Window:SelectTab(1)
 
 Fluent:Notify({
     Title = "Hazır!",
-    Content = "Script başarıyla yüklendi.",
+    Content = "Kayıtlı " .. #AddedItems .. " eşya yüklendi.",
     Duration = 3
 })
