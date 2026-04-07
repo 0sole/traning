@@ -1,4 +1,5 @@
-local Library = require(script.Parent:WaitForChild('Library'))
+-- main.lua içindeki ilk satırı bununla değiştir:
+local Library = require(script.Parent:FindFirstChild('Library') or script.Parent:WaitForChild('Library'))
 local MainModule = {}
 
 -- Item tanımlamaları
